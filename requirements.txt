@@ -1,0 +1,13 @@
+django>=3.2
+hume
+numpy
+requests
+channels
+Pillow
+asgiref
+python-dotenv
+opencv-python
+mediapipe
+websocket-client
+aiohttp
+python-decouple

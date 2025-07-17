@@ -1,0 +1,102 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
+from sklearn.preprocessing import MinMaxScaler
+
+# Generate a synthetic time-series dataset
+time = np.arange(0, 100, 0.1) # Time steps from 0 to 100 with step size 0.1
+data = np.sin(time) + np.random.normal(scale=0.1, size=len(time))
+# Sinusoidal trend with noise
+# Plot the generated dataset
+plt.figure(figsize=(10, 5))
+plt.plot(time, data, label="Time-Series Data")
+plt.xlabel("Time")
+plt.ylabel("Value") 
+plt.legend()
+plt.show()
+
+train_size = int(len(time) * 0.8)
+time_train, time_test = time[:train_size], time[train_size:]
+data_train, data_test = data[:train_size], data[train_size:]
+
+scaler = MinMaxScaler(feature_range=(0, 1))
+data_train_scaled = scaler.fit_transform(data_train.reshape(-1,
+1))
+data_test_scaled = scaler.transform(data_test.reshape(-1, 1))
+
+def create_sequences(data, seq_length):
+ sequences, labels = [], []
+ for i in range(len(data) - seq_length):
+    sequences.append(data[i: i + seq_length])
+    labels.append(data[i + seq_length])
+ return np.array(sequences), np.array(labels)
+
+seq_length = 20 # Number of past time steps to consider
+X_train, y_train = create_sequences(data_train_scaled, seq_length)
+X_test, y_test = create_sequences(data_test_scaled, seq_length)
+# Reshape input data for RNN model (samples, time steps, features)
+X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
+
+# Define the RNN model
+model = keras.Sequential([
+ keras.layers.LSTM(50, return_sequences=True,
+input_shape=(seq_length, 1)), # First LSTM layer
+ keras.layers.LSTM(50, return_sequences=False), # Second LSTM layer
+ keras.layers.Dense(25, activation='relu'), # Fully connected layer
+ keras.layers.Dense(1) # Output layer (predicting one futurevalue)
+ ])
+# Compile the model
+model.compile(optimizer='adam', loss='mse')
+# Display model summary
+model.summary()
+
+history = model.fit(X_train, y_train, epochs=5, batch_size=16,
+validation_data=(X_test, y_test))
+
+plt.figure(figsize=(8, 4))
+plt.plot(history.history['loss'], label="Training Loss")
+plt.plot(history.history['val_loss'], label="Validation Loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
+
+predictions = model.predict(X_test)
+# Reverse the scaling transformation to get original values
+predictions = scaler.inverse_transform(predictions)
+y_test_original = scaler.inverse_transform(y_test.reshape(-1, 1))
+#7.2 Plot Actual vs Predicted Values
+plt.figure(figsize=(10, 5))
+plt.plot(time_test[seq_length:], y_test_original, label="Actual Data")
+plt.plot(time_test[seq_length:], predictions, label="Predicted Data", linestyle="dashed")
+plt.xlabel("Time")
+plt.ylabel("Value")
+plt.legend()
+plt.show()
+future_steps = 100 # Predict 50 future steps
+future_input = X_test[-1] # Start from the last sequence
+future_predictions = []
+for _ in range(future_steps):
+   next_pred = model.predict(future_input.reshape(1, seq_length,1))[0]
+   future_predictions.append(next_pred)
+   future_input = np.roll(future_input, -1)
+   future_input[-1] = next_pred
+
+future_predictions = scaler.inverse_transform(np.array(future_predictions).reshape(-1,1))
+
+plt.figure(figsize=(10, 5))
+plt.plot(time_test[seq_length:], y_test_original, label="Actual Data")
+plt.plot(time_test[seq_length:], predictions, label="Predicted Data", linestyle="dashed")
+plt.axvline(x=time_test[-1], color='red', linestyle="dotted", label="Future Predictions Start")
+plt.plot(np.arange(time_test[-1], time_test[-1] + future_steps * 0.1, 0.1), future_predictions, label="Future Predictions",
+linestyle="dashed", color="green")
+plt.xlabel("Time")
+plt.ylabel("Value")
+plt.legend()
+plt.show()
+
+
+                                    

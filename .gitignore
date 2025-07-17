@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.eggs
+*.env
+*.venv
+.env
+.venv
+ENV/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Django
+*.sqlite3
+*.log
+staticfiles/
+media/
+
+# Jupyter
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audio/Video/Model files
+*.mp3
+*.wav
+*.webm
+*.ogg
+*.vtt
+*.jpg
+*.png
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.vrm
+*.vroid
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Other
+node_modules/
+
+# Environment variables
+.env
+.env.*
